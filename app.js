@@ -15,20 +15,26 @@ app.use(fileUpload({
     limits: { fileSize: 50 * 1024 * 1024 },
   }));
 
-app.listen(8080, ()=>console.log("listening on 8080"));
+app.listen(3030, ()=>console.log("listening on 8080"));
 
 const swaggerOptions = {
     swaggerDefinition:{
+        swagger: "2.0",
         info:{
             title: 'DataCap API',
             version: '1.0.0'
         }
     },
-    apis:['app.js'],
-    url: "/api-docs/swagger.json"
+    url: "/api-docs/swagger.json",
+    apis:['app.js']
+    
 }
 
 var swaggerDocs = swaggerJSDoc(swaggerOptions);
+app.get("/api-docs/swagger.json", (req, res) => res.json(swaggerDocs));
+
+//app.use('/api-docs', swaggerUI.serveFiles(null, swaggerDocs), swaggerUI.setup(null, swaggerDocs));
+
 app.use('/api-docs',swaggerUI.serve,swaggerUI.setup(swaggerDocs))
 
 /** 
