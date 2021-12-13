@@ -15,7 +15,7 @@ app.use(fileUpload({
     limits: { fileSize: 50 * 1024 * 1024 },
   }));
 
-app.listen(3030, ()=>console.log("listening on 3030"));
+app.listen(8080, ()=>console.log("listening on 8080"));
 
 const swaggerOptions = {
     swaggerDefinition:{
