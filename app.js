@@ -6,16 +6,20 @@ var api = require('./api.js')
 const multer = require('multer');
 var bodyParser = require('body-parser');
 const fileUpload = require('express-fileupload');
-
+const FormData = require('form-data');
 
 var app = express();
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended: true}));
+
+app.use(bodyParser.json({limit: '50mb', extended: true}))
+app.use(bodyParser.urlencoded({limit: '50mb', extended: true}))
 app.use(fileUpload({
     limits: { fileSize: 50 * 1024 * 1024 },
   }));
 
-app.listen(8080, ()=>console.log("listening on 8080"));
+  
+var port = process.env.PORT || 3000;
+  
+//app.listen(port, ()=>console.log("listening on " + port));
 
 const swaggerOptions = {
     swaggerDefinition:{
@@ -47,7 +51,7 @@ app.use('/api-docs',swaggerUI.serve,swaggerUI.setup(swaggerDocs))
  *       description: Add a document
  *       in: formData 
  *       required: true 
- *       type: file 
+ *       type: string 
  *     - name: rules 
  *       description: Rules to execute
  *       in: formData 
@@ -91,13 +95,15 @@ app.use('/api-docs',swaggerUI.serve,swaggerUI.setup(swaggerDocs))
 
    
 
-    let fileToProcess = req.files.uploadFile
+    let fileToProcess = req.file.uploadFile
     let rules = req.body.rules
     let workflow = req.body.workflow
     let application = req.body.application
     let ext = req.body.ext
     let pageType = req.body.pageType
     let docId = req.body.docId
+
+
 
     api.uploadFile(fileToProcess,rules,workflow, application,ext,pageType,docId).then(data=> {
         res.send(data);
@@ -109,6 +115,90 @@ app.use('/api-docs',swaggerUI.serve,swaggerUI.setup(swaggerDocs))
     })
    
  });  
+
+/** 
+ * @swagger 
+ * /datacapUploadAndPrepareBase64: 
+ *   post: 
+ *     description: Prepare a DataCap Operation with Base64
+ *     parameters: 
+ *     - name: uploadFile 
+ *       description: Add a document in base64
+ *       in: formData 
+ *       required: true 
+ *       type: string 
+ *     - name: rules 
+ *       description: Rules to execute
+ *       in: formData 
+ *       required: true 
+ *       type: string 
+ *     - name: pageType 
+ *       description: Page type IN datacap
+ *       in: formData 
+ *       required: true 
+ *       type: string 
+ *     - name: application 
+ *       description: DataCap Application to use
+ *       in: formData 
+ *       required: true 
+ *       type: string 
+ *     - name: ext 
+ *       description: DataCap file extension to fetch
+ *       in: formData 
+ *       required: true 
+ *       type: string 
+ *     - name: workflow 
+ *       description: DataCap workflow
+ *       in: formData 
+ *       required: true 
+ *       type: string 
+ *     - name: docid 
+ *       description: DataCap page id to fetch, in case of conversion
+ *       in: formData 
+ *       required: true 
+ *       type: string 
+ *     responses:  
+ *       201: 
+ *         description: Created  
+ *       400:
+ *          description: Error
+ *   
+ */  
+ app.post('/datacapUploadAndPrepareBase64',(req,res)=>{  
+
+    //api.uploadFile()
+
+   
+
+    let fileToProcess = req.body.uploadFile
+    let rules = req.body.rules
+    let workflow = req.body.workflow
+    let application = req.body.application
+    let ext = req.body.ext
+    let pageType = req.body.pageType
+    let docId = req.body.docId
+    let fileData = {};
+   
+    var bufferValue = Buffer.from(fileToProcess,"base64");
+    let form = {
+        fileData: {
+            value: bufferValue,
+            filename: "TM000001.pdf",
+        },
+        fileName: "TM000001.pdf",
+        myId: "tm000001.pdf"
+      }
+    
+    api.uploadFileAndPrepareBase64(bufferValue,rules,workflow, application,ext,pageType,docId).then(data=> {
+        res.send(data);
+        res.status(201).send(); 
+    })
+    .catch(err => {
+        res.send(err);
+        res.status(400).send();
+    })    
+   
+ }); 
 
 
 /** 

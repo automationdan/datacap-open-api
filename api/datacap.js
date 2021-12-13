@@ -1,7 +1,7 @@
 var request = require('request');
 require('dotenv').config();
 var http = require('http');
-
+var axios = require('axios');
 var Stream = require('stream');
 const fs = require('fs')
 var bodyParser = require('body-parser');
@@ -19,10 +19,13 @@ var DOMParser = require('xmldom').DOMParser;
 module.exports = {
 
 
+      
+
      setDatacapWtm: function(baseURL, port){
        dcapBaseUrl=baseURL
        dcapBasePort = port
      },
+
      convertToText: function(xml){
        return new Promise((resolve, reject) => {
           var xmlDoc = new DOMParser().parseFromString(xml,"text/xml");
@@ -123,6 +126,7 @@ module.exports = {
 
     uploadDocumentForProcessing:  function(transId,files){
       return new Promise((resolve, reject) => {
+        console.log(files.data)
         var formData = {data: files.data};
         //console.log(files);
         var origFile = files.name;
@@ -143,6 +147,48 @@ module.exports = {
             resolve("done")
           }
         });
+      })
+    },
+
+    uploadDocumentForProcessingBase64:  function(transId,fileData,ext){
+      return new Promise((resolve, reject) => {
+        console.log(fileData)
+        var formData = {data: fileData}; 
+        //console.log(files);
+    
+
+        //Configure the endpoint
+        var urlRest = "http://" +dcapBaseUrl + ':' + dcapBasePort + '/wtm/servicewtm.svc/Transaction/SetFile/'+ transId +'/tm000001/' + ext
+        console.log(urlRest);
+
+        //res.write("Sending documents");
+      
+        console.log("posting filedata");
+       // Send a POST request
+        axios({
+          method: 'post',
+          url: urlRest,
+          data: fileData
+        }).then(function (response) {
+          resolve("done")
+        }).catch(function (error) {
+          console.log(error);
+        })
+        ;
+        /*
+        //Do the post
+        request.post({url:urlRest, formData: fileData}, function (err, httpResponse, body) {
+            console.log("Here we go!");
+          if (err) {
+            console.log("Mad Error: " +err);
+            reject(err)
+          }else{
+            console.log("I am in here again")
+            resolve("done")
+            
+          }
+        });
+        */
       })
     },
 
@@ -234,5 +280,31 @@ module.exports = {
               resolve(body)
             });
         });
-      }
+      },
+
+      uploadBatchFileBase64: function(transId,file,docType,ext) {
+        console.log("the world is a vampire")
+        return new Promise((resolve, reject) => {
+          console.log("doing Batch stuff");
+  
+         
+          //Configure the batch file
+          var xml = "<B id=\"Transaction\"><V n=\"TYPE\">Transaction</V><P id=\"TM000001\"><V n=\"TYPE\">"+ docType + "</V>";
+          xml +="<V n=\"IMAGEFILE\">tm000001."+ext+"</V><V n=\"DATAFILE\">tm000001.xml</V><V n=\"STATUS\">0</V></P></B>";
+          console.log(xml);
+          //Configure the endpoint
+          var urlRest = "http://" +dcapBaseUrl + ':' + dcapBasePort + '/wtm/servicewtm.svc/Transaction/SetFile/'+ transId +'/scan/xml'
+          console.log(urlRest);
+          var formData = {data: xml}
+  //res.write("Sending Batch Configuration");
+          //Do the post
+          request.post({url:urlRest, formData: formData}, function (err, httpResponse, body) {
+              if (err) {
+                console.log(err);
+                  reject(err)
+              }
+                resolve(body)
+              });
+          });
+        }
 }
