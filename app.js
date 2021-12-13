@@ -24,7 +24,8 @@ const swaggerOptions = {
             version: '1.0.0'
         }
     },
-    apis:['app.js']
+    apis:['app.js'],
+    url: "/api-docs/swagger.json"
 }
 
 var swaggerDocs = swaggerJSDoc(swaggerOptions);
