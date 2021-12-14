@@ -158,8 +158,13 @@ app.use('/api-docs',swaggerUI.serve,swaggerUI.setup(swaggerDocs))
  *       required: true 
  *       type: string 
  *     responses:  
- *       201: 
- *         description: Created  
+ *       200: 
+ *         description: Created
+ *         schema:
+ *          type: object
+ *          properties:
+ *              transactionId: 
+ *                  type: string
  *       400:
  *          description: Error
  *   
@@ -190,8 +195,8 @@ app.use('/api-docs',swaggerUI.serve,swaggerUI.setup(swaggerDocs))
       }
     
     api.uploadFileAndPrepareBase64(bufferValue,rules,workflow, application,ext,pageType,docId).then(data=> {
-        res.send(data);
-        res.status(201).send(); 
+        res.send({transactionId: data});
+        res.status(200).send(); 
     })
     .catch(err => {
         res.send(err);
@@ -243,18 +248,18 @@ app.use('/api-docs',swaggerUI.serve,swaggerUI.setup(swaggerDocs))
  *       required: true 
  *       type: string 
  *     responses:  
- *       201: 
- *         description: Created  
+ *       200: 
+ *         description: Created
+ *         schema:
+ *          type: object
+ *          properties:
+ *              transactionId: 
+ *                  type: string
  *       400:
  *          description: Error
  *   
  */  
  app.post('/datacapUploadAndPrepare',(req,res)=>{  
-
-    //api.uploadFile()
-
-   
-
     let fileToProcess = req.files.uploadFile
     let rules = req.body.rules
     let workflow = req.body.workflow
@@ -262,16 +267,14 @@ app.use('/api-docs',swaggerUI.serve,swaggerUI.setup(swaggerDocs))
     let ext = req.body.ext
     let pageType = req.body.pageType
     let docId = req.body.docId
-
     api.uploadFileAndPrepare(fileToProcess,rules,workflow, application,ext,pageType,docId).then(data=> {
-        res.send(data);
+        res.send({transactionId: data});
         res.status(201).send(); 
     })
     .catch(err => {
         res.send(err);
         res.status(400).send();
     })    
-   
  }); 
 
 
@@ -312,8 +315,22 @@ app.use('/api-docs',swaggerUI.serve,swaggerUI.setup(swaggerDocs))
  *       required: true 
  *       type: string 
  *     responses:  
- *       201: 
- *         description: Created  
+ *       200: 
+ *         description: Created
+ *         schema:
+ *          type: object
+ *          properties:
+ *              transactionId: 
+ *                  type: string
+ *              values:
+ *                  type: array
+ *                  items:
+ *                      type: object
+ *                      properties:
+ *                          FieldName:
+ *                              type: string
+ *                          FieldValue:
+ *                              type: string
  *       400:
  *          description: Error
  */  
