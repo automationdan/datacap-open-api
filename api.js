@@ -1,11 +1,13 @@
+const { beginDataCapTransaction } = require('./api/datacap');
 var datacap = require('./api/datacap');
+var tesseract = require('./api/tesseract');
 
 module.exports  = {
     
     convertToFile: function(base64){
       return "";
     },
-    uploadFile: function(fileToProcess,rules,workflow, application,ext,pageType,docId){
+    uploadFile: function(fileToProcess,rules,workflow, application,ext,pageType,docId,server,port){
         console.log(rules);
         console.log(workflow);
         console.log(application);
@@ -13,6 +15,7 @@ module.exports  = {
         console.log(docId);
         console.log(ext);
         return new Promise((resolve, reject) => {
+          datacap.setDatacapWtm(server,port);
             datacap.beginDataCapTransaction()
                 .then(data => {
                     transId = data;
@@ -50,7 +53,7 @@ module.exports  = {
             })
         },
 
-        uploadFileAndPrepare: function(fileToProcess,rules,workflow, application,ext,pageType,docId){
+        uploadFileAndPrepare: function(fileToProcess,rules,workflow, application,ext,pageType,docId,server,port){
             console.log(rules);
             console.log(workflow);
             console.log(application);
@@ -59,6 +62,7 @@ module.exports  = {
             console.log(ext);
             console.log("file " + fileToProcess);
             return new Promise((resolve, reject) => {
+              datacap.setDatacapWtm(server,port);
                 datacap.beginDataCapTransaction()
                     .then(data => {
                         transId = data;
@@ -84,7 +88,7 @@ module.exports  = {
                       })
                 })
             },
-            uploadFileAndPrepareBase64: function(fileToProcess,rules,workflow, application,ext,pageType,docId){
+            uploadFileAndPrepareBase64: function(fileToProcess,rules,workflow, application,ext,pageType,docId,server,port){
               console.log(rules);
               console.log(workflow);
               console.log(application);
@@ -93,6 +97,7 @@ module.exports  = {
               console.log(ext);
               console.log("file " + fileToProcess);
               return new Promise((resolve, reject) => {
+                datacap.setDatacapWtm(server,port);
                 datacap.beginDataCapTransaction()
                   .then(data => {
                     transId = data;
@@ -123,13 +128,15 @@ module.exports  = {
                   
               },
 
-            datacapExecuteRules: function(transId,rules,workflow, application,ext,docId){
+            datacapExecuteRules: function(transId,rules,workflow, application,ext,docId,server,port){
                 console.log(rules);
                 console.log(workflow);
                 console.log(application);
                 console.log(docId);
                 console.log(ext);
+               
                 return new Promise((resolve, reject) => {
+                  datacap.setDatacapWtm(server,port);
                     datacap.executeRules(transId,application,workflow,rules).then(data=>{
                         datacap.fetchDataFile(transId,ext,docId).then(data=>{
                           datacap.convertToText(data).then(data =>{
@@ -145,6 +152,15 @@ module.exports  = {
                     .catch(err => {reject("Execute Rules" + err)})
                 })
                 
+            },
+            doTSStuff: function(file){
+              return new Promise((resolve, reject) => {
+              tesseract.doTSStuff(file).then(data=> {; 
+                console.log(data); 
+                resolve(data);
+              })
+            })
+
             }
         
     }

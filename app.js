@@ -7,7 +7,7 @@ const multer = require('multer');
 var bodyParser = require('body-parser');
 const fileUpload = require('express-fileupload');
 const FormData = require('form-data');
-
+const { v4: uuidv4 } = require('uuid');
 var app = express();
 
 app.use(bodyParser.json({limit: '50mb', extended: true}))
@@ -15,11 +15,6 @@ app.use(bodyParser.urlencoded({limit: '50mb', extended: true}))
 app.use(fileUpload({
     limits: { fileSize: 50 * 1024 * 1024 },
   }));
-
-  
-var port = process.env.PORT || 3000;
-  
-//app.listen(port, ()=>console.log("listening on " + port));
 
 const swaggerOptions = {
     swaggerDefinition:{
@@ -54,6 +49,16 @@ app.use('/api-docs',swaggerUI.serve,swaggerUI.setup(swaggerDocs))
  *       type: string 
  *     - name: rules 
  *       description: Rules to execute
+ *       in: formData 
+ *       required: true 
+ *       type: string 
+ *     - name: server 
+ *       description: DataCap server
+ *       in: formData 
+ *       required: true 
+ *       type: string 
+ *     - name: port 
+ *       description: DataCap port
  *       in: formData 
  *       required: true 
  *       type: string 
@@ -97,6 +102,8 @@ app.use('/api-docs',swaggerUI.serve,swaggerUI.setup(swaggerDocs))
 
     let fileToProcess = req.file.uploadFile
     let rules = req.body.rules
+    let server = req.body.server
+    let port = req.body.port
     let workflow = req.body.workflow
     let application = req.body.application
     let ext = req.body.ext
@@ -105,7 +112,7 @@ app.use('/api-docs',swaggerUI.serve,swaggerUI.setup(swaggerDocs))
 
 
 
-    api.uploadFile(fileToProcess,rules,workflow, application,ext,pageType,docId).then(data=> {
+    api.uploadFile(fileToProcess,rules,workflow, application,ext,pageType,docId,server,port).then(data=> {
         res.send(data);
         res.status(201).send(); 
     })
@@ -124,6 +131,16 @@ app.use('/api-docs',swaggerUI.serve,swaggerUI.setup(swaggerDocs))
  *     parameters: 
  *     - name: uploadFile 
  *       description: Add a document in base64
+ *       in: formData 
+ *       required: true 
+ *       type: string   
+ *     - name: server
+ *       description: DataCap server
+ *       in: formData 
+ *       required: true 
+ *       type: string 
+ *     - name: port 
+ *       description: DataCap port
  *       in: formData 
  *       required: true 
  *       type: string 
@@ -183,6 +200,8 @@ app.use('/api-docs',swaggerUI.serve,swaggerUI.setup(swaggerDocs))
     let pageType = req.body.pageType
     let docId = req.body.docId
     let fileData = {};
+    let server = req.body.server
+    let port = req.body.port
    
     var bufferValue = Buffer.from(fileToProcess,"base64");
     let form = {
@@ -194,7 +213,7 @@ app.use('/api-docs',swaggerUI.serve,swaggerUI.setup(swaggerDocs))
         myId: "tm000001.pdf"
       }
     
-    api.uploadFileAndPrepareBase64(bufferValue,rules,workflow, application,ext,pageType,docId).then(data=> {
+    api.uploadFileAndPrepareBase64(bufferValue,rules,workflow, application,ext,pageType,docId,server,port).then(data=> {
         res.send({transactionId: data});
         res.status(200).send(); 
     })
@@ -217,6 +236,16 @@ app.use('/api-docs',swaggerUI.serve,swaggerUI.setup(swaggerDocs))
  *       in: formData 
  *       required: true 
  *       type: file 
+ *     - name: server
+ *       description: DataCap server
+ *       in: formData 
+ *       required: true 
+ *       type: string 
+ *     - name: port 
+ *       description: DataCap port
+ *       in: formData 
+ *       required: true 
+ *       type: string 
  *     - name: rules 
  *       description: Rules to execute
  *       in: formData 
@@ -267,7 +296,10 @@ app.use('/api-docs',swaggerUI.serve,swaggerUI.setup(swaggerDocs))
     let ext = req.body.ext
     let pageType = req.body.pageType
     let docId = req.body.docId
-    api.uploadFileAndPrepare(fileToProcess,rules,workflow, application,ext,pageType,docId).then(data=> {
+    let server = req.body.server
+    let port = req.body.port
+
+    api.uploadFileAndPrepare(fileToProcess,rules,workflow, application,ext,pageType,docId,server,port).then(data=> {
         res.send({transactionId: data});
         res.status(201).send(); 
     })
@@ -288,7 +320,17 @@ app.use('/api-docs',swaggerUI.serve,swaggerUI.setup(swaggerDocs))
  *       description: DataCap Transaction ID
  *       in: formData 
  *       required: true 
+ *       type: string
+ *     - name: server
+ *       description: DataCap server
+ *       in: formData 
+ *       required: true 
  *       type: string 
+ *     - name: port 
+ *       description: DataCap port
+ *       in: formData 
+ *       required: true 
+ *       type: string  
  *     - name: rules 
  *       description: Rules to execute
  *       in: formData 
@@ -347,8 +389,10 @@ app.use('/api-docs',swaggerUI.serve,swaggerUI.setup(swaggerDocs))
     let ext = req.body.ext
     let pageType = req.body.pageType
     let docId = req.body.docid
+    let server = req.body.server
+    let port = req.body.port
 
-    api.datacapExecuteRules(transId,rules,workflow, application,ext,docId).then(data=> {
+    api.datacapExecuteRules(transId,rules,workflow, application,ext,docId,server,port).then(data=> {
         res.send(data);
         res.status(201).send(); 
     })
@@ -357,6 +401,50 @@ app.use('/api-docs',swaggerUI.serve,swaggerUI.setup(swaggerDocs))
         res.status(400).send();
     })
    
+ }); 
+
+
+
+/** 
+ * @swagger 
+ * /doTSStuff: 
+ *   post: 
+ *     description: Prepare a TS Operation
+ *     parameters: 
+ *     - name: uploads 
+ *       description: DataCap Transaction ID
+ *       in: formData 
+ *       required: true 
+ *       type: file 
+ *     responses:  
+ *       200: 
+ *         description: Created
+ *         content:
+ *          text/plain:
+ *              schema:
+ *                  type: string
+ *          
+ *       400:
+ *          description: Error
+ */  
+ app.post('/doTSStuff',(req,res)=>{  
+
+    let fileToProcess = req.files.uploads
+    uploadPath = __dirname + '/tmp/' + uuidv4() + ".pdf";
+ 
+    fileToProcess.mv(uploadPath)
+    console.log("it did it");
+    api.doTSStuff(uploadPath).then(data=> {
+        console.log("I am here")
+        //res.send(data);
+        res.status(201).send(data); 
+        console.log("We sent it")
+    })
+    .catch(err => {
+        res.send(err);
+        res.status(400).send();
+    })
+  
  }); 
 
 
